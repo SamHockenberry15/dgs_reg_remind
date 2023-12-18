@@ -1,9 +1,11 @@
 package dgs.reminder.dgs_reg_remind.service;
 
+import dgs.reminder.dgs_reg_remind.AuthService;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,6 +21,8 @@ public class TournamentService {
     @Value("${dgs.reg.browser.baseTournamentSite}")
     private String baseTournamentSite;
 
+    @Autowired
+    private AuthService authService;
 
     @GetMapping("tournament")
     public void updateTournamentInfo(){
@@ -29,8 +33,7 @@ public class TournamentService {
         String myTournamentsSite = baseTournamentSite;
         driver.get(myTournamentsSite);
 
-        PlayerService playerService = new PlayerService();
-        driver = playerService.login(driver);
+        driver = authService.login(driver);
 
         //get main content
         WebElement mainContent = driver.findElement(By.id("maincontent"));
@@ -41,10 +44,6 @@ public class TournamentService {
         List<String> tounamentLinks = interestedTournaments.stream()
                 .map((event) -> event.findElement(By.tagName("a")).getAttribute("href"))
                 .toList();
-
-        //Check for registration information
-
-
 
         for(String s : tounamentLinks){
             try{
