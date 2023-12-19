@@ -37,4 +37,13 @@ public class AuthService {
         return password;
     }
 
+    public String encryptText(String password) {
+
+        return "";
+    }
+
+    public String decryptText(String password) {
+
+        return "";
+    }
 }
