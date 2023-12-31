@@ -1,4 +1,4 @@
-package dgs.reminder.dgs_reg_remind;
+package dgs.reminder.dgs_reg_remind.utils;
 
 public enum AWSDynamoDBTables {
     Player

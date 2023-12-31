@@ -1,6 +1,5 @@
 package dgs.reminder.dgs_reg_remind.service;
 
-import dgs.reminder.dgs_reg_remind.AuthService;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;

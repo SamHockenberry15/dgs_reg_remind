@@ -1,6 +1,6 @@
 package dgs.reminder.dgs_reg_remind.repo;
 
-import dgs.reminder.dgs_reg_remind.AWSDynamoDBTables;
+import dgs.reminder.dgs_reg_remind.utils.AWSDynamoDBTables;
 import dgs.reminder.dgs_reg_remind.entity.Player;
 import dgs.reminder.dgs_reg_remind.utils.AWSDynamoDBUtils;
 import org.springframework.beans.factory.annotation.Autowired;

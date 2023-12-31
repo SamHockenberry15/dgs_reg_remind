@@ -1,4 +1,4 @@
-package dgs.reminder.dgs_reg_remind;
+package dgs.reminder.dgs_reg_remind.service;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -16,6 +16,12 @@ public class AuthService {
 
     @Value("${player.password}")
     private String password;
+
+    @Value("${security.password.front.salt}")
+    private String frontSalt;
+
+    @Value("${security.password.back.salt}")
+    private String backSalt;
 
 
     public WebDriver login(WebDriver driver){
@@ -38,6 +44,7 @@ public class AuthService {
     }
 
     public String encryptText(String password) {
+        String fullText = frontSalt + password + backSalt;
 
         return "";
     }
