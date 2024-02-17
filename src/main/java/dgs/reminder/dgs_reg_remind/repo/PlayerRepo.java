@@ -5,10 +5,15 @@ import dgs.reminder.dgs_reg_remind.entity.Player;
 import dgs.reminder.dgs_reg_remind.utils.AWSDynamoDBUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import software.amazon.awssdk.core.Response;
+import software.amazon.awssdk.core.SdkResponse;
+import software.amazon.awssdk.http.SdkHttpResponse;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -37,8 +42,8 @@ public class PlayerRepo{
         }).collect(Collectors.toList());
     }
 
-    public PutItemResponse save(Player p) {
-        PutItemResponse putItemResponse = null;
+    public SdkResponse save(Player p) {
+        SdkResponse response;
         try {
             if(p.getUuid() == null){
                 p.setUuid(UUID.randomUUID().toString());
@@ -49,12 +54,29 @@ public class PlayerRepo{
                     .item(AWSDynamoDBUtils.convertObjectToPutRequestItem(p,AWSDynamoDBTables.Player))
                     .build();
 
-            putItemResponse = dynamoDbClient.putItem(putItemRequest);
+            ScanRequest scanRequest = ScanRequest.builder().tableName(AWSDynamoDBTables.Player.name())
+                    .filterExpression("pdgaNumber = :pdgaNumber")
+                    .expressionAttributeValues(Map.of(":pdgaNumber", AttributeValue.builder().s(p.getPdgaNumber()).build()))
+                    .build();
+
+            ScanResponse sresp = dynamoDbClient.scan(scanRequest);
+
+            if(sresp.count() > 0){
+                System.out.println("Player already added to DB!");
+                response = PutItemResponse.builder()
+                        .sdkHttpResponse(SdkHttpResponse.builder()
+                                .statusCode(200)
+                                .statusText("Player already added to DB!")
+                                .build())
+                        .build();
+            }else{
+                response = dynamoDbClient.putItem(putItemRequest);
+            }
         } catch (Exception e){
-            System.out.println(e.getMessage());
+            throw new RuntimeException(e.getMessage());
         }
 
-        return putItemResponse;
+        return response;
     }
 
 }

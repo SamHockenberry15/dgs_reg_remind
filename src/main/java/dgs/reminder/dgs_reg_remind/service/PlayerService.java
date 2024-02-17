@@ -6,14 +6,15 @@ import dgs.reminder.dgs_reg_remind.entity.PlayerCredential;
 import dgs.reminder.dgs_reg_remind.repo.PlayerCredentialRepository;
 import dgs.reminder.dgs_reg_remind.repo.PlayerRepo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.core.SdkResponse;
+import software.amazon.awssdk.http.SdkHttpFullResponse;
+import software.amazon.awssdk.http.SdkHttpResponse;
 import software.amazon.awssdk.services.dynamodb.model.PutItemResponse;
 
 import java.util.List;
 
 @Service
-@PropertySource("classpath:auth.properties")
 public class PlayerService {
 
     @Autowired
@@ -29,17 +30,17 @@ public class PlayerService {
         return playerRepo.findAll(AWSDynamoDBTables.Player);
     }
 
-    public PutItemResponse addNewPlayer(Player p) {
-        PutItemResponse response = null;
+    public SdkHttpResponse addNewPlayer(Player p) {
+        SdkResponse response;
         try {
             response = playerRepo.save(p);
-            if (response.sdkHttpResponse().isSuccessful()){
+            if (response != null && response.sdkHttpResponse().isSuccessful()){
                 PlayerCredential pc = new PlayerCredential(p.getUuid(),authService.encryptText(p.getEmail()), authService.encryptText(p.getPassword()));
                 playerCredentialRepository.save(pc);
             }
         } catch (Exception e){
-            System.out.println(e.getMessage());
+            throw new RuntimeException(e.getMessage());
         }
-        return response;
+        return response.sdkHttpResponse();
     }
 }

@@ -4,14 +4,14 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@RestController("tournaments")
+@Service("tournaments")
 public class TournamentService {
 
     @Value("${dgs.reg.browser.driver}")
@@ -23,16 +23,18 @@ public class TournamentService {
     @Autowired
     private AuthService authService;
 
-    @GetMapping("tournament")
     public void updateTournamentInfo(){
 
         System.setProperty("webdriver.chrome.driver", browserDriver);
-        WebDriver driver = new ChromeDriver();
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--headless");
+        WebDriver driver = new ChromeDriver(options);
 
         String myTournamentsSite = baseTournamentSite;
         driver.get(myTournamentsSite);
 
         driver = authService.login(driver);
+
 
         //get main content
         WebElement mainContent = driver.findElement(By.id("maincontent"));
@@ -43,6 +45,13 @@ public class TournamentService {
         List<String> tounamentLinks = interestedTournaments.stream()
                 .map((event) -> event.findElement(By.tagName("a")).getAttribute("href"))
                 .toList();
+
+        //table.registration-schedule.mini - MPO current rating
+
+        // what do we want to do if we can't figure out when registration is? Send me an email of the list of tournaments that will require manual data manipulation
+        //then if in DB then remove it from the email list -- h1.tournament-name
+
+
 
         for(String s : tounamentLinks){
             try{
