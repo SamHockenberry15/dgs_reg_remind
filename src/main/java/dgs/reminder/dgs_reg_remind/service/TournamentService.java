@@ -1,6 +1,5 @@
 package dgs.reminder.dgs_reg_remind.service;
 
-import org.apache.catalina.webresources.AbstractResource;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
@@ -11,12 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service("tournaments")
@@ -33,14 +28,13 @@ public class TournamentService {
 
 
     //\s+(\d{4})
-    private static final String DATE_REGEX = "(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\\s+(\\d{1,2})";
     private String currentPdgaRating = "";
 
     public void updateTournamentInfo() throws InterruptedException {
 
         System.setProperty("webdriver.chrome.driver", browserDriver);
         ChromeOptions options = new ChromeOptions();
-//        options.addArguments("--headless");
+        options.addArguments("--headless");
         WebDriver driver = new ChromeDriver(options);
 
 
@@ -64,6 +58,7 @@ public class TournamentService {
                 .map((event) -> event.findElement(By.tagName("a")).getAttribute("href"))
                 .toList();
 
+        List<String> eventsUnableToFindRegInfo = new ArrayList<>();
         //table.registration-schedule.mini - MPO current rating
 
         // what do we want to do if we can't figure out when registration is? Send me an email of the list of tournaments that will require manual data manipulation
@@ -71,11 +66,47 @@ public class TournamentService {
 
 
 
-        for(String s : tounamentLinks) {
+        for(String link : tounamentLinks) {
 
-            driver.get(s);
+            //check for registration
+            driver.get(link);
+            String tournamentName = driver.findElement(By.className("tournament-name")).getText();
+            System.out.println(tournamentName + ":  ");
 
-            //only check for registration if not currently registered
+            boolean isRegistered = checkForPlayerRegistration(driver, link);
+
+            driver.get(link);
+
+            //player is not registered
+            if(!isRegistered){
+                //if tournament is already open do we want to register now?
+                //should we have a DB of already registered tournaments?
+                boolean isTournamentAlreadyOpen = checkForOpenRegistration(driver);
+                boolean isTournamentMainRegistration = checkForMainRegistration(driver);
+                boolean isTournamentTieredRegistration = checkForTieredRegistration(driver);
+                boolean tournamentDateFound = false;
+
+                if(isTournamentAlreadyOpen && !isTournamentTieredRegistration){
+                    System.out.println("Need to determine what to do here...");
+                    //register for tournament?
+                }else if(!isTournamentAlreadyOpen && isTournamentMainRegistration){
+                    String date = findMainRegistrationDate(driver);
+                    tournamentDateFound = true;
+                    System.out.println(date);
+                }else if(!isTournamentAlreadyOpen && isTournamentTieredRegistration){
+                    String date = findTieredRegistrationDate(driver);
+                    tournamentDateFound = true;
+                    System.out.println(date);
+                }else if(isTournamentAlreadyOpen && isTournamentTieredRegistration){
+                    //find date then sign up immediately?
+                    System.out.println("Need to find date and determine what to do here...");
+                }
+
+                if(!tournamentDateFound)
+                    eventsUnableToFindRegInfo.add(tournamentName);
+
+                Thread.sleep(1000);
+            }
 
             /*
             Options:
@@ -88,41 +119,64 @@ public class TournamentService {
 
 
              */
-            boolean hasMainRegistration = checkForMainRegistration(driver);
-
-            if(!hasMainRegistration)
-                checkForTieredRegistration(driver);
-
-            Thread.sleep(1000);
         }
+        System.out.println();
+        System.out.println("Unable to get reg for:  ");
+        eventsUnableToFindRegInfo.forEach(System.out::println);
 
     }
 
-    private boolean checkForMainRegistration(WebDriver driver) {
+    private boolean checkForPlayerRegistration(WebDriver driver, String link) throws InterruptedException {
+        driver.get(link+"/registration");
+
         try{
-            System.out.print(driver.findElement(By.className("tournament-name")).getText() + ":  ");
-            System.out.println(driver.findElement(By.className("tournament-registration-opens")).findElement(By.tagName("b")).getText());
+            WebElement e = driver.findElement(By.className("registration-member"));
+            System.out.println("Already registered... skipped!");
             return true;
-        } catch (NoSuchElementException e){
-            System.out.println("Unable to find Main Registration...");
+        }catch (Exception e){
             return false;
         }
 
     }
 
-    /*
+    private boolean checkForOpenRegistration(WebDriver driver) {
+        //tournament-register-link for button
+        try {
+            driver.findElement(By.className("tournament-register-link"));
+        }catch (Exception e){
+            return false;
+        }
+        return true;
+    }
 
-    //*[@id="maincontent"]/div[4]/table/tbody/tr[1]/td/div/span[1]/b
-
-    /html/body/div[3]/div[2]/div[2]/div[4]/table/tbody/tr[1]/td/div/span[1]/b
-     */
-
-
-
+    private boolean checkForMainRegistration(WebDriver driver) {
+        try{
+            driver.findElement(By.className("tournament-registration-opens")).findElement(By.tagName("b"));
+            return true;
+        } catch (NoSuchElementException e){
+            return false;
+        }
+    }
 
     private boolean checkForTieredRegistration(WebDriver driver) {
         try{
-            System.out.print(driver.findElement(By.className("tournament-name")).getText() + ":  ");
+            driver.findElement(By.className("registration-schedule-mini"));
+            return true;
+        } catch (NoSuchElementException e){
+            return false;
+        }
+    }
+
+    private String findMainRegistrationDate(WebDriver driver){
+        try{
+            return driver.findElement(By.className("tournament-registration-opens")).findElement(By.tagName("b")).getText();
+        } catch (NoSuchElementException e){
+            return "Cannot get main registration date for tournament...";
+        }
+    }
+
+    private String findTieredRegistrationDate(WebDriver driver) {
+        try{
             List<WebElement> elems = driver.findElement(By.className("registration-schedule-mini")).findElements(By.tagName("tr"));
             String currentMPORegistrationDate = "";
             String previousMPORatingRequirement = "";
@@ -136,7 +190,7 @@ public class TournamentService {
                         .map( span ->  span.getText().replaceAll("[+]", "").replaceAll("MPO", "").replaceAll("\\s", ""))
                         .collect(Collectors.joining());
 
-                if(!requiredRatingText.isEmpty() && Integer.parseInt(this.currentPdgaRating) > Integer.parseInt(requiredRatingText)){
+                if(!requiredRatingText.isEmpty() && Integer.parseInt(this.currentPdgaRating) > Integer.parseInt(requiredRatingText)) {
                     currentMPORegistrationDate = elem.findElements(By.tagName("td")).get(0).getText();
                     break;
                 }else if(!previousMPORatingRequirement.isEmpty() && requiredRatingText.isEmpty()){
@@ -144,16 +198,13 @@ public class TournamentService {
                     break;
                 }else{
                     previousMPORatingRequirement = requiredRatingText;
+                    currentMPORegistrationDate = elem.findElements(By.tagName("td")).get(0).getText();
                 }
             }
 
-
-            System.out.println(currentMPORegistrationDate);
-            return true;
-//            System.out.println(driver.findElement(By.xpath("//span[contains(text(),'MPO')]/b")).getText());
+            return currentMPORegistrationDate.replace("\n", " ").replace("at ", "");
         } catch (NoSuchElementException e){
-            System.out.println("Unable to find Tiered Registration...");
-            return false;
+            return "Cannot find tierd registration date...";
         }
     }
 
