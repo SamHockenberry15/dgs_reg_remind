@@ -1,4 +1,6 @@
-##Email Instructions
+# Email Instructions
+
+## Application.properties Configuration
 Add the following properties to application.properties
 ```
 spring.mail.host=<host>
