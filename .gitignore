@@ -36,3 +36,5 @@ build/
 ### Excluded Files ###
 src/main/resources/application.properties
 src/main/resources/auth.properties
+
+**/.DS_Store
