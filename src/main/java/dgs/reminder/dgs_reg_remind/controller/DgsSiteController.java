@@ -37,7 +37,7 @@ public class DgsSiteController {
     }
 
     @GetMapping("executeCollectTournamentData")
-    public void collectTournamentData(@RequestParam boolean test){
+    public void collectTournamentData(@RequestParam boolean test) throws InterruptedException {
         if(test){
             tournamentService.updateTournamentInfo();
         }else {
