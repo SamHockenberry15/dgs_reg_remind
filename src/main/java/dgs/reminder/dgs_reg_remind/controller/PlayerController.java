@@ -7,6 +7,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import software.amazon.awssdk.core.SdkResponse;
+import software.amazon.awssdk.http.SdkHttpFullResponse;
+import software.amazon.awssdk.http.SdkHttpResponse;
 import software.amazon.awssdk.services.dynamodb.model.PutItemResponse;
 
 import java.util.List;
@@ -23,7 +26,7 @@ public class PlayerController {
     }
 
     @PostMapping("addPlayer")
-    public PutItemResponse addNewPlayer(@RequestBody Player p){
-       return playerService.addNewPlayer(p);
+    public String addNewPlayer(@RequestBody Player p){
+       return playerService.addNewPlayer(p).statusText().get();
     }
 }

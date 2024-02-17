@@ -1,6 +1,5 @@
 package dgs.reminder.dgs_reg_remind.utils;
 
-import dgs.reminder.dgs_reg_remind.AWSDynamoDBTables;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.lang.reflect.Field;

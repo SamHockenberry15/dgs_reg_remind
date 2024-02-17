@@ -1,22 +1,12 @@
 package dgs.reminder.dgs_reg_remind.controller;
 
-import dgs.reminder.dgs_reg_remind.AuthService;
 import dgs.reminder.dgs_reg_remind.entity.Player;
 import dgs.reminder.dgs_reg_remind.service.DgsService;
-import dgs.reminder.dgs_reg_remind.service.PlayerService;
 import dgs.reminder.dgs_reg_remind.service.TournamentService;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.support.ui.Select;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.*;
 
 
 @RestController("remind")
@@ -47,7 +37,7 @@ public class DgsSiteController {
     }
 
     @GetMapping("executeCollectTournamentData")
-    public void collectTournamentData(@RequestParam boolean test){
+    public void collectTournamentData(@RequestParam boolean test) throws InterruptedException {
         if(test){
             tournamentService.updateTournamentInfo();
         }else {
