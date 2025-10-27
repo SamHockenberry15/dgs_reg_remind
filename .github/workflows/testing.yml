@@ -20,6 +20,7 @@ jobs:
   Execute-Maven-Install:
     runs-on: ubuntu-latest
     if: ${{ vars.MAVEN_INSTALL == 'true' }}
+    environment: testing
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
