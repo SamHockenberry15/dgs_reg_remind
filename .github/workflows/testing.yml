@@ -16,3 +16,20 @@ jobs:
         run: |
           ls ${{ github.workspace }}
       - run: echo "🍏 This job's status is ${{ job.status }}."
+
+  Execute-Maven-Install:
+    runs-on: ubuntu-latest
+    if: ${{ vars.MAVEN_INSTALL == 'true' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Sets up Java 17 in the current container
+        uses: actions/setup-java@v4
+        with:
+          java_version: '17'
+          distribution: 'jetbrains'
+          cache: "maven"
+      - name: Runs Maven Install
+        run: mvn install
+
+
