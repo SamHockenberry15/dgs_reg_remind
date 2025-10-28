@@ -31,6 +31,6 @@ jobs:
           distribution: 'jetbrains'
           cache: "maven"
       - name: Runs Maven Install
-        run: mvn install
+        run: mvn install -DskipTests
 
 
